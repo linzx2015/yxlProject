@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:task="http://www.springframework.org/schema/task" 
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd"
+        default-autowire="byName">
+  <!-- 配置定时任务 -->
+  <!-- <task:scheduled-tasks> -->
+  
+  	<!-- 
+			ref:执行哪个类
+			method:执行哪个方法
+			cron:指的是什么时候执行(定时),每隔多长时间执行(间隔)
+			* * * * * * :
+			1*:表示秒
+			2*:表示分
+			3*:表示时
+			4*:日
+			5*:月
+			每个位置*表示通配,木有值:
+			填写的值:数字(填写年月日,合法的数字)
+			填写的值:数字/数字 /左边表示每次间隔的起始位置变量执行;/右边表示间隔执行
+			0 22 15 * * :每天的15:22:执行testOne方法
+			2/5 * * * * :每隔5秒的2秒执行:即(2,7,12,17)/
+			
+			每次间隔调用的时候,会检查目标方法是否执行完成;
+			如果执行完成,再执行目标方法
+			如果木有执行完成,智能的跳过此次调用目标方法,等待下一次;直到目标方法执行完成的时候,才会重新调用目标方法 
+		 -->
+		<!-- <task:scheduled ref="myJobUtil" method="testOne" cron="0/5 * * * * ?"/> -->
+		<!-- 调度可以写多个方法 
+			如果写两个一样的方法,都执行
+		-->
+		<!-- <task:scheduled ref="myJobUtil" method="testTwo" cron="3/5 * * * * ?"/> -->
+  
+  	<!-- 定时任务关联的组件和执行任务的方法,注意:测试时可以使用main方法进行测试
+  		每隔五分钟执行一次spiderYxlJob
+  	-->
+  	<!-- <task:scheduled ref="myJobUtil" method="spiderYxlJob" cron="0 0/5 * * * ?"/>
+  
+  </task:scheduled-tasks> -->
+   
+</beans>

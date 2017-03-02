@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kkk.yxl.question.dao.IAnswerDao">
+	<insert id="insert" parameterType="com.kkk.yxl.question.pojo.AAnswer" useGeneratedKeys="true" keyProperty="id">
+		insert into "public"."a_answer" 
+		  ("questionId","orderNum","outId","name","status","createTime","updateTime","pubTime") 
+		values 
+		(#{questionId},#{orderNum},#{outId},#{name},#{status},#{createTime},#{updateTime},#{pubTime})
+	</insert>
+	<update id="update" parameterType="com.kkk.yxl.question.pojo.AAnswer">
+		update "public"."a_answer" 
+		<set>
+			"questionId"=#{questionId}, "orderNum"=#{orderNum}, "outId"=#{outId},
+			 "name"=#{name}, "status"=#{status}, "createTime"=#{createTime},
+			  "updateTime"=#{updateTime}, "pubTime"=#{pubTime}
+		</set>
+		where "id"=#{id}
+	</update>
+	<delete id="delete" parameterType="com.kkk.yxl.question.pojo.AAnswer">
+		delete from "public"."a_answer" where "id"=#{id}
+	</delete>
+	
+	<select id="queryOneObject" parameterType="map" resultType="com.kkk.yxl.question.pojo.AAnswer">
+		select * from "public"."a_answer"
+		<where>
+			<if test="id!=null">
+				"id"=#{id}
+			</if>
+		</where>
+	</select>
+	
+	<select id="queryMultiObject" parameterType="map" resultType="com.kkk.yxl.question.pojo.AAnswer">
+		<choose>
+			<when test="pageCond=='true'">
+				select count(*) as id from "public"."a_answer"
+			</when>
+			<otherwise>
+				select * from "public"."a_answer"
+			</otherwise>
+		</choose>
+		<where>
+			<if test="keyword!=null and keyword!=''">
+				and (name like #{keyword})
+			</if>
+			<if test="status!=null">
+				and status=#{status}
+			</if>
+			<if test="stDate!=null and edDate!=null">
+				<![CDATA[
+					and updateTime>=#{stDate} and updateTime<#{edDate}
+				]]>
+			</if>
+		</where>
+		<choose>
+			<when test="pageCond=='true'">
+			</when>
+			<otherwise>
+				<choose>
+					<when test="orderby=='createTimeAsc'">
+						order by "createTime" asc
+					</when>
+					<otherwise>
+						order by "pubTime" desc
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+		<!-- 真正分页 -->
+		<choose>
+			<when test="pageCond=='true'">
+			</when>
+			<when test="pageCond=='false'">
+				limit #{pageSize} offset #{currenRecord}
+			</when>
+		</choose>
+	</select>
+</mapper>

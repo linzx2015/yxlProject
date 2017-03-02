@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
+    <wb-module deploy-name="yxlProject">
+        <wb-resource deploy-path="/" source-path="/WebContent" tag="defaultRootSource"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src_config"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src_common"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src_head"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src_user"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src_back"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src_question"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src_outer"/>
+        <property name="context-root" value="yxlProject"/>
+        <property name="java-output-path" value="/yxlProject/build/classes"/>
+    </wb-module>
+</project-modules>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kkk.yxl.question.dao.IAItemsDao">
+
+	<insert id="insert" parameterType="com.kkk.yxl.question.pojo.AItems" useGeneratedKeys="true" keyProperty="id">
+		insert into "public"."a_items" 
+			("name", "content", "status", "createTime", "updateTime", 
+			"pubTime", "columnsId", "testedNum", "favNum", "suggNum", 
+			"questionNum", "outId", "imgPath") 
+		values 
+			(#{name},#{content},#{status},#{createTime},#{updateTime},#{
+			pubTime},#{columnsId},#{testedNum},#{favNum},#{suggNum},#{
+			questionNum},#{outId},#{imgPath})
+	</insert>
+	<update id="update" parameterType="com.kkk.yxl.question.pojo.AItems">
+		update "public"."a_items" 
+		<set>
+			"name"=#{name},"content"=#{content},"status"=#{status},"createTime"=#{createTime},"updateTime"=#{updateTime},
+			"pubTime"=#{pubTime},"columnsId"=#{columnsId},"testedNum"=#{testedNum},"favNum"=#{favNum},"suggNum"=#{suggNum},
+			"questionNum"=#{questionNum},"outId"=#{outId},"imgPath"=#{imgPath}
+		</set>
+		where "id"=#{id}
+	</update>
+	<delete id="delete" parameterType="com.kkk.yxl.question.pojo.AItems">
+		delete from "public"."a_items" where "id"=#{id}
+	</delete>
+	
+	<resultMap type="com.kkk.yxl.question.pojo.AItems" id="itemMap">
+		<id property="id" column="id"/>
+		<result column="columnsId" property="columnsId"/>
+		
+		<!-- 关联栏目 ,多对一,多的一方传外键columnsId-->
+		<association property="columns" column="columnsId" javaType="com.kkk.yxl.question.pojo.AColumns" select="queryOneColumn"/>
+		<!-- 关联问题,一对多,一的一端传id,多的一端传外键-->
+		<collection property="questionList" column="id" ofType="com.kkk.yxl.question.pojo.AQuestion" select="queryQuestionList"/>
+	</resultMap>
+	
+	<!-- 一个问题下,有多个答案,在进行一次关联 -->
+	<resultMap type="com.kkk.yxl.question.pojo.AQuestion" id="questionMap">
+		<id column="id" property="id"/>
+		
+		<!-- 一个问题下有多个答案 -->
+		<collection property="answerList" column="id" ofType="com.kkk.yxl.question.pojo.AAnswer" select="queryAnswerList"/>
+	</resultMap>
+	
+	<!-- 查询对应的问题项,返回question -->
+	<select id="queryQuestionList" resultMap="questionMap">
+		select * from "public"."a_question" where "itemsId"=#{id}
+	</select>
+	
+	<!-- 查询多个答案 -->
+	<select id="queryAnswerList" resultType="com.kkk.yxl.question.pojo.AAnswer">
+		select * from "publc"."a_answer" where "questionId"=#{id}
+	</select>
+	
+	<!-- 查询单个栏目 -->
+	<select id="queryOneColumn" resultType="com.kkk.yxl.question.pojo.AColumns">
+		select * from "public"."a_columns" where "id"=#{columnsId}
+	</select>
+	
+	<select id="queryOneObject" parameterType="map" resultMap="itemMap">
+		select * from "public"."a_items"
+		<where>
+			<if test="id!=null">
+				id=#{id}
+			</if>
+			<if test="outId!=null">
+				and "outId"=#{outId}
+			</if>
+		</where>
+	</select>
+	
+	<select id="queryMultiObject" parameterType="map" resultMap="itemMap">
+		<choose>
+			<when test="pageCond=='true'">
+				select count(*) as id from "public"."a_items"
+			</when>
+			<otherwise>
+				select * from "public"."a_items"
+			</otherwise>
+		</choose>
+		<where>
+			<if test="keyword!=null and keyword!=''">
+				and (name like #{keyword} or content like #{keyword})
+			</if>
+			<if test="status!=null">
+				and status=#{status}
+			</if>
+			<if test="stDate!=null and edDate!=null">
+				<![CDATA[
+					and updateTime>=#{stDate} and updateTime<#{edDate}
+				]]>
+			</if>
+			<if test="columnsId!=null">
+				and "columnsId"=#{columnsId} 
+			</if>
+			<!-- 大于发布时间 -->
+			<if test="pubTimeDa!=null">
+				and "pubTime" > #{pubTimeDa}
+			</if>
+			<if test="pubTimeXiao!=null">
+			    <![CDATA[
+				and "pubTime" < #{pubTimeXiao}
+			    ]]>
+			</if>
+		</where>
+		<choose>
+			<when test="pageCond=='true'">
+			</when>
+			<otherwise>
+				<choose>
+					<when test="orderby=='createTimeAsc'">
+						order by "createTime" asc
+					</when>
+					<when test="orderby=='testedNumDesc'">
+						order by "testedNum" desc
+					</when>
+					<when test="orderby=='pubTimeAsc'">
+						order by "pubTime" asc
+					</when>
+					<otherwise>
+						order by "pubTime" desc,"id" desc
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+		<!-- 真正分页 -->
+		<choose>
+			<when test="pageCond=='true'">
+			</when>
+			<when test="pageCond=='false'">
+				limit #{pageSize} offset #{currenRecord}
+			</when>
+		</choose>
+	</select>
+</mapper>

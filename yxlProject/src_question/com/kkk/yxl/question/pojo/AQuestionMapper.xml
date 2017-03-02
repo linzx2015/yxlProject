@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kkk.yxl.question.dao.IAQuestionDao">
+	<insert id="insert" parameterType="com.kkk.yxl.question.pojo.AQuestion" useGeneratedKeys="true" keyProperty="id">
+		insert into "public"."a_question" 
+		  ("itemsId", "name", "orderNum", "status", "createTime", "updateTime", "pubTime")
+		 values 
+		 (#{itemsId},#{name},#{orderNum},#{status},#{createTime},#{updateTime},#{pubTime})
+	</insert>
+	<update id="update" parameterType="com.kkk.yxl.question.pojo.AQuestion">
+		update "public"."a_question" 
+		<set>
+			"itemsId"=#{itemsId}, "name"=#{name}, "orderNum"=#{orderNum}, "status"=#{status}, 
+			"createTime"=#{createTime}, "updateTime"=#{updateTime}, 
+			"pubTime"=#{pubTime}
+		</set>
+		where id=#{id}
+	</update>
+	<delete id="delete" parameterType="com.kkk.yxl.question.pojo.AQuestion">
+		delete from "public"."a_question" where id=#{id}
+	</delete>
+	
+	<select id="queryOneObject" parameterType="map" resultMap="questionMap">
+		select * from "public"."a_question"
+		<where>
+			<if test="id!=null">
+				id=#{id}
+			</if>
+		</where>
+	</select>
+	
+	<!-- 自定义question返回结果,获取与answer表的关联数据 -->
+	<resultMap type="com.kkk.yxl.question.pojo.AQuestion" id="questionMap">
+		<!-- 得到AQuestion对应的表 -->
+		<id column="id" property="id"/>
+		<!-- 查询关联的多个answer -->
+		<collection property="answerList" column="id" ofType="com.kkk.yxl.question.pojo.AAnswer" select="queryAnswerList"/>
+	</resultMap>
+	
+	<select id="queryAnswerList" resultType="com.kkk.yxl.question.pojo.AAnswer">
+		<!-- 从question中得到对应的id,然后根据关联字段 questionId进行查询-->
+		select * from "public"."a_answer" where "questionId"=#{id}	
+	</select>
+	
+	<select id="queryMultiObject" parameterType="map" resultMap="questionMap">
+		<choose>
+			<when test="pageCond=='true'">
+				select count(*) as id from "public"."a_question"
+			</when>
+			<otherwise>
+				select * from "public"."a_question"
+			</otherwise>
+		</choose>
+		<where>
+			<if test="keyword!=null and keyword!=''">
+				and (name like #{keyword})
+			</if>
+			<if test="status!=null">
+				and status=#{status}
+			</if>
+			<if test="stDate!=null and edDate!=null">
+				<![CDATA[
+					and updateTime>=#{stDate} and updateTime<#{edDate}
+				]]>
+			</if>
+		</where>
+		<choose>
+			<when test="pageCond=='true'">
+			</when>
+			<otherwise>
+				<choose>
+					<when test="orderby=='createTimeAsc'">
+						order by "createTime" asc
+					</when>
+					<otherwise>
+						order by "pubTime" desc
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+		<!-- 真正分页 -->
+		<choose>
+			<when test="pageCond=='true'">
+			</when>
+			<when test="pageCond=='false'">
+				limit #{pageSize} offset #{currenRecord}
+			</when>
+		</choose>
+	</select>
+</mapper>

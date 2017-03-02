@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 不自己实现dao的类 -->  
+<mapper namespace="com.kkk.yxl.user.dao.IRoleDao">
+	<insert id="insert" parameterType="com.kkk.yxl.user.pojo.Arole" useGeneratedKeys="true" keyProperty="id">
+		insert into a_role("name","content","status","createTime","updateTime","pubTime")
+		values (#{name},#{content},#{status},#{createTime},#{updateTime},#{pubTime})
+	</insert>
+	<update id="update" parameterType="com.kkk.yxl.user.pojo.Arole">
+		update a_role 
+		<set>
+			"name"=#{name},"content"=#{content},"status"=#{status},"createTime"=#{createTime},"updateTime"=#{updateTime},"pubTime"=#{pubTime}
+		</set>
+		where "id"=#{id}
+	</update>
+	<delete id="delete" parameterType="com.kkk.yxl.user.pojo.Arole">
+		delete from a_role
+		<where>
+			"id"=#{id}
+		</where>
+	</delete>
+	
+	<!-- 定义一个返回的结果adminMap 
+		type为传入的参数
+	-->
+	<resultMap type="com.kkk.yxl.user.pojo.Arole" id="roleMap">
+		<!-- id为pojo对应的字段 column对应的外键列 -->
+		<id property="id" column="id"/>
+		<!-- 为管理员的集合赋值 -->
+		<collection property="adminList" ofType="com.kkk.yxl.user.pojo.AAdmins" column="id" select="queryAdminList"/>
+	</resultMap>
+	
+	<!-- 定义collection对应的queryAdminList查询 -->
+	<select id="queryAdminList" resultType="com.kkk.yxl.user.pojo.AAdmins">
+		select * from a_admins 
+		<where>
+			"roleId"=#{id}
+		</where>
+	</select>
+	
+	<!-- 查询一个角色,并且附带查询管理员关联的信息 -->
+	<select id="queryOneObject" parameterType="map" resultMap="roleMap">
+		select * from a_role
+		<where>
+			"id"=#{id}
+		</where>
+	</select>
+	
+	<!-- 查询多条记录
+	原始SQL:select * from a_role where status = #{status} and updateTime >= #{stDate} and updateTime < #{edDate} order by lastLoginTime desc
+	总记录数的SQL:select count(*) from a_role where status = #{status} and updateTime >= #{stDate} and updateTime < #{edDate} 
+	分页的SQL:select * from a_role where status = #{status} and updateTime >= #{stDate} and updateTime < #{edDate} order by lastLoginTime desc limit ? ,?
+	
+	map中的键:
+	pageCond == 'true',分页查询总记录数
+	pageCond == 'false',分页查询记录
+	pageCond = 不传的时候,不分页,查询所有记录
+	-->
+	<select id="queryMultiObject" parameterType="map" resultMap="roleMap">
+		<choose>
+			<when test="pageCond=='true'">
+				select count(*) from a_role
+			</when>
+			<otherwise>
+				select * from a_role
+			</otherwise>
+		</choose>
+		<where>
+			<if test="keyword!=null and keyword!=''">
+				and ("name" like #{keyword} or "content" like #{keyword})
+			</if>
+			<if test="status!=null">
+				and "status"=#{status}
+			</if>
+			<if test="stDate!=null and edDate!=null">
+				<![CDATA[
+				and "updateTime">=#{stDate} and "updateTime"<#{edDate}				
+				]]>
+			</if>
+		</where>
+		
+		<choose>
+			<when test="pageCond=='true'">
+				<!-- 查询总记录数,不加sql -->
+			</when>
+			<otherwise>
+				<choose>
+					<when test="orderby=='createTimeAsc'">
+						order by "createTime" asc
+					</when>
+					<otherwise>
+						order by "pubTime" desc
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+		
+		<choose>
+			<when test="pageCond=='true'">
+				<!-- 查总记录数,不做任何操作,postsql分页,先按没页大小,后按当前记录 -->
+			</when>
+			<when test="pageCond=='false'">
+				limit #{pageSize} offset #{currentRecord}
+			</when>
+		</choose>
+	</select>
+	
+</mapper>
+  
+  
+  
+  
+  
+

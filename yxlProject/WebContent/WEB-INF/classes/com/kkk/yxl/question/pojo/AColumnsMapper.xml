@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kkk.yxl.question.dao.IColumnsDao">
+	<insert id="insert" parameterType="com.kkk.yxl.question.pojo.AColumns" useGeneratedKeys="true" keyProperty="id">
+		insert into "public"."a_columns"
+		 ("name", "url", "content", "createTime", "updateTime", "pubTime", "flag", "status") 
+		 values 
+		(#{name},#{url},#{content},#{createTime},#{updateTime},#{pubTime},#{flag},#{status})
+	</insert>
+	<update id="update" parameterType="com.kkk.yxl.question.pojo.AColumns">
+		update "public"."a_columns" 
+		<set>
+			"name"=#{name}, "url"=#{url}, "content"=#{content},
+			"createTime"=#{createTime}, "updateTime"=#{updateTime}, 
+			"pubTime"=#{pubTime}, "flag"=#{flag}, "status"=#{status}, 
+		</set>
+		where id=#{id}
+	</update>
+	<delete id="delete" parameterType="com.kkk.yxl.question.pojo.AColumns">
+		delete from "public"."a_columns" where id=#{id}
+	</delete>
+	
+	<!-- 查询多个关联对象 -->
+	<resultMap type="com.kkk.yxl.question.pojo.AColumns" id="columnMap">
+		<id property="id" column="id"/>
+		<collection property="itemList" column="id" 
+			ofType="com.kkk.yxl.question.pojo.AItems" select="queryItemList"/>
+	</resultMap>
+	
+	<select id="queryItemList">
+		select * from "public"."a_items" where "columnsId"=#{id}
+	</select>
+	
+	<select id="queryOneObject" parameterType="map" resultMap="columnMap">
+		select * from "public"."a_columns"
+		<where>
+			<if test="id!=null">
+				id=#{id}
+			</if>
+			<if test="url!=null and url!=''">
+				url=#{url}
+			</if>
+		</where>
+	</select>
+	
+	<select id="queryMultiObject" parameterType="map" resultMap="columnMap">
+		<choose>
+			<when test="pageCond=='true'">
+				select count(*) as id from "public"."a_columns"
+			</when>
+			<otherwise>
+				select * from "public"."a_columns"
+			</otherwise>
+		</choose>
+		<where>
+			<if test="keyword!=null and keyword!=''">
+				and (name like #{keyword} or url like #{keyword} or content like #{keyword})
+			</if>
+			<if test="status!=null">
+				and status=#{status}
+			</if>
+			<if test="flag!=null and flag!=''">
+				and flag=#{flag}
+			</if>
+			<if test="stDate!=null and edDate!=null">
+				<![CDATA[
+					and updateTime>=#{stDate} and updateTime<#{edDate}
+				]]>
+			</if>
+		</where>
+		<choose>
+			<when test="pageCond=='true'">
+			</when>
+			<otherwise>
+				<choose>
+					<when test="orderby=='createTimeAsc'">
+						order by "createTime" asc
+					</when>
+					<otherwise>
+						order by "pubTime" desc
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+		<!-- 真正分页 -->
+		<choose>
+			<when test="pageCond=='true'">
+			</when>
+			<when test="pageCond=='false'">
+				limit #{pageSize} offset #{currenRecord}
+			</when>
+		</choose>
+	</select>
+</mapper>

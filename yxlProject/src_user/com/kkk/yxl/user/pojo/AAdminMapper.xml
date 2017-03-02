@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 不自己实现dao的类 -->  
+<mapper namespace="com.kkk.yxl.user.dao.IAdminDao">
+	<resultMap type="com.kkk.yxl.user.pojo.AAdmins" id="adminMap">
+		<id property="id" column="id"/>
+		<!-- 加上关联字段,不然会没有值 -->
+		<id property="roleId" column="roleId"/> 
+		<!-- 查询role,并且赋值 -->
+		<association property="role" column="roleId" javaType="com.kkk.yxl.user.pojo.Arole" select="queryOneRole"/>		
+	</resultMap>
+	<select id="queryOneRole" resultType="com.kkk.yxl.user.pojo.Arole">
+		select * from a_role where "id"=#{roleId}
+	</select>
+
+	<select id="queryOneObject" parameterType="map" resultMap="adminMap">
+		select * from a_admins
+		<where>
+			<if test="id!=null and id!=''">
+				and "id"=#{id}
+			</if>
+		</where>
+	</select>	
+	<!-- 分页查询,通过分页条件进行区别是否进行分页查询 -->
+	<!-- 查询多条记录
+	原始SQL:select * from a_admins where status = #{status} and updateTime >= #{stDate} and updateTime < #{edDate} order by lastLoginTime desc
+	总记录数的SQL:select count(*) from a_admins where status = #{status} and updateTime >= #{stDate} and updateTime < #{edDate} 
+	分页的SQL:select * from a_admins where status = #{status} and updateTime >= #{stDate} and updateTime < #{edDate} order by lastLoginTime desc limit ? ,?
+	
+	map中的键:
+	pageCond == 'true',分页查询总记录数
+	pageCond == 'false',分页查询记录
+	pageCoud = 不传的时候,不分页,查询所有记录
+	-->
+	<select id="queryMultiObject" parameterType="map" resultMap="adminMap">
+		<choose>
+			<when test="pageCond=='true'">	
+				<!-- 将查询的总条数存到id中-->
+				select count(*) as id from a_admins
+			</when>
+			<otherwise>
+				select * from a_admins
+			</otherwise>
+		</choose>
+		<where>
+			<if test="keyword!=null and keyword!=''">
+				and ("email" like #{keyword} or "trueName" like #{keyword} or "qq" like #{keyword})
+			</if>
+			<if test="status!=null">
+				and "status"=#{status}
+			</if>
+			<if test="stDate!=null and edDate!=null">
+				<![CDATA[
+					and "updateTime" >=#{stDate} and "updateTime"<#{edDate}
+				]]>
+			</if>
+		</where>
+		<!-- 不分页的时候传order by
+			分页取记录的时候传orderby
+		 -->
+		<choose>
+			<when test="pageCond=='true'">
+				<!-- 查询全部记录 -->
+			</when>
+			<otherwise>
+				<choose>
+					<!--不分页取记录 -->
+					<when test="orderby=='createTimeAsc'">
+						order by "createTime" asc
+					</when>
+					<!-- 分页取记录 -->
+					<otherwise>
+						order by "lastLoginTime" desc
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+		<!-- 分页 -->
+		<choose>
+			<when test="pageCond=='true'">
+				<!-- 查询总记录时,不进行分页,postsql 先页大小,后当前记录,进行分页,并且数据库字段必须要加上引号 -->	
+			</when>
+			<when test="pageCond=='false'">
+				limit #{pageSize} offset #{currenRecord}
+			</when>
+		</choose>
+	</select>
+	
+	<insert id="insert" parameterType="com.kkk.yxl.user.pojo.AAdmins" useGeneratedKeys="true" keyProperty="id">
+		insert into a_admins 
+		("roleId", "email", "password", "phone", "qq", "trueName", "status", "createTime", "updateTime", "lastLoginTime", "photoPath") 
+			values 
+		(#{roleId},#{ email},#{ password},#{ phone},#{ qq},#{ trueName},#{ status},#{ createTime},#{ updateTime},#{ lastLoginTime},#{ photoPath}) 
+	</insert>
+	<update id="update">
+		update a_admins 
+		<set>
+			"roleId"=#{roleId},"email"=#{email},"password"=#{password},"phone"=#{phone},
+			"qq"=#{qq},"trueName"=#{trueName},"photoPath"=#{photoPath},"status"=#{status},"createTime"=#{createTime},"updateTime"=#{updateTime},
+			"lastLoginTime"=#{lastLoginTime},
+		</set>
+		where "id" = #{id}
+	</update>
+	<delete id="delete" parameterType="com.kkk.yxl.user.pojo.AAdmins">
+		delete from a_admins
+		<where>
+			<if test="id!=null and id!=''">
+				"id"=#{id}
+			</if>
+		</where>
+	</delete>
+	
+</mapper>
+  
+  
+  
+  
+  
+
